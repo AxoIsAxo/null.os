@@ -1,7 +1,7 @@
 # Null OS
 
 DISCLAIMER:
-This is not a real OS. Its a "fake" os, built with python. You have to run this script in an existing OS. We plan to implement it into a minimal Linux kernel for fun tho.
+This is not a real OS. Its a "fake" os, built with python. You have to run this script in an existing OS. I plan to implement it into a minimal Linux kernel for fun tho.
 
 ## Description
 I made this just for fun, its really cool.
