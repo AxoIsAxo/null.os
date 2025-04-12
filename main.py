@@ -77,7 +77,7 @@ NEOFETCH_ART = f"""
                                                                                                                                                          
                                                                                                                                                       
                                                                                                                                                          
-{RESET}"""  # Add the reset AFTER the art
+{RESET}""" # Add the reset AFTER the art
 
 
 def neofetch():
@@ -282,18 +282,40 @@ def download(url, destination=None):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")  # Catch all other potential errors.
 
+def javac(filename):
+    """Compiles a Java file using javac.
+    Usage: javac <filename>"""
+    try:
+        subprocess.run(["javac", filename], check=True)
+        print(f"Compiled: {filename}")
+    except FileNotFoundError as e:
+        print(f"Error: javac not found: {e}")
+        print("Please make sure that the Java Development Kit (JDK) is installed and in your system's PATH.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Compilation failed for {filename}: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
 def run(filename):
     """Runs a code file (Python, Java, Lua, or JavaScript).
     Usage: run <filename>"""
     try:
-        # Try 'python3' first, then fallback to 'python'
-        try:
-            subprocess.run(["python3", filename], check=True)
-        except FileNotFoundError:
-            subprocess.run(["python", filename], check=True)
-        except Exception as e:
-            print(f"Error: Execution failed: {e}")
-
+        if filename.endswith(".py"):
+            try:
+                subprocess.run(["python3", filename], check=True)
+            except FileNotFoundError:
+                subprocess.run(["python", filename], check=True)
+        elif filename.endswith(".class"):
+            # Assumes the .class file is in the current directory or a known location
+            # and that the main class name is the same as the filename (without .class)
+            class_name = os.path.splitext(os.path.basename(filename))[0]
+            subprocess.run(["java", class_name], check=True)
+        elif filename.endswith(".lua"):
+            subprocess.run(["lua", filename], check=True)
+        elif filename.endswith(".js"):
+            subprocess.run(["node", filename], check=True)
+        else:
+            print("Error: Unknown file type. Please specify a .py, .class, .lua, or .js file.")
     except FileNotFoundError as e:
         print(f"Error: Interpreter not found: {e}")
         print("Please make sure that Python, Java, Lua, and Node.js are installed and in your system's PATH.")
@@ -313,19 +335,121 @@ def move(source, destination):
     except OSError as e:
         print(f"Error: Could not move {source} to {destination}: {e}")
 
+def cowsay(text):
+    """Displays text using an embedded cowsay.
+       Usage: cowsay <text>"""
+    cow = f"""
+     ____________
+    < {text} >
+     ------------
+            \   ^__^
+             \  (oo)\_______
+                (__)\       )\/\\
+                    ||----w |
+                    ||     ||
+    """
+    print(cow)
+
+import os
+import requests
+from urllib.parse import urlparse
+
+def download_file(url, filepath):
+    """Helper function to download a file from a URL."""
+    response = requests.get(url, stream=True, headers={'User-Agent': 'Mozilla/5.0'})
+    response.raise_for_status()
+    with open(filepath, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=8192):
+            file.write(chunk)
+
+import os
+import requests
+from urllib.parse import urlparse
+
+def download_file(url, filepath):
+    """Helper function to download a file from a URL."""
+    response = requests.get(url, stream=True, headers={'User-Agent': 'Mozilla/5.0'})
+    response.raise_for_status()
+    with open(filepath, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=8192):
+            file.write(chunk)
+
+def installapp(url):
+    """Installs an application from an installation configuration file.
+       Usage: installapp <url>"""
+    try:
+        response = requests.get(url, stream=True, headers={'User-Agent': 'Mozilla/5.0'})
+        response.raise_for_status()
+
+        install_config = {}
+        optional_urls = []
+        
+        for line in response.text.splitlines():
+            if ":" in line:
+                key, value = line.strip().split(":", 1)
+                key, value = key.strip(), value.strip()
+                if key == "optional-url":
+                    optional_urls.append(value)
+                else:
+                    install_config[key] = value
+
+        folder_name = install_config.get("folder-name")
+        conf_url = install_config.get("conf-url")
+        script_url = install_config.get("script-url")
+
+        if not folder_name or not conf_url or not script_url:
+            print("Error: Invalid installation configuration. Missing folder-name, conf-url, or script-url.")
+            return
+
+        app_dir = os.path.join(APPLICATIONS_DIR, folder_name)
+        os.makedirs(app_dir, exist_ok=True)
+
+        # Download configuration file
+        conf_filename = os.path.join(app_dir, "app.conf")
+        download_file(conf_url, conf_filename)
+
+        # Download script file
+        script_filename = os.path.join(app_dir, os.path.basename(urlparse(script_url).path))
+        download_file(script_url, script_filename)
+
+        # Download optional files with original names
+        for opt_url in optional_urls:
+            opt_filename = os.path.join(app_dir, os.path.basename(urlparse(opt_url).path))
+            download_file(opt_url, opt_filename)
+
+        print(f"Installed application '{folder_name}' to '{app_dir}'")
+
+        load_applications()  # Reload applications
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error: Failed to download files - {e}")
+
+
+def download_file(url, filename):
+    """Downloads a file from a URL to a specific filename."""
+    try:
+        response = requests.get(url, stream=True, headers={'User-Agent': 'Mozilla/5.0'})
+        response.raise_for_status()
+
+        with open(filename, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+
+        print(f"Downloaded: {url} to {filename}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading {url}: {e}")
+    except OSError as e:
+        print(f"Error saving file: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
 def setup_app(app_dir):
     """Sets up an application from a directory."""
-    conf_file = os.path.join(app_dir, os.path.basename(app_dir) + ".conf")
-    script_file = None
+    conf_file = os.path.join(app_dir, "app.conf")  # Name check for app.conf
 
-    # Find script file
-    for file in os.listdir(app_dir):
-        if file.endswith((".py", ".java", ".lua", ".js")):
-            script_file = os.path.join(app_dir, file)
-            break
-
-    if not os.path.exists(conf_file) or not script_file:
-        print(f"Error: Invalid app structure in {app_dir}. Missing conf file or script.")
+    if not os.path.exists(conf_file):
+        print(f"Error: Invalid app structure in {app_dir}. Missing conf file.")
         return
 
     try:
@@ -339,9 +463,16 @@ def setup_app(app_dir):
             name = conf_data.get("name")
             command = conf_data.get("command")
             version = conf_data.get("version")
+            file_to_run = conf_data.get("file")  # Get the filename to run
 
-            if not name or not command or not version:
-                print(f"Error: Invalid conf file in {app_dir}. Missing 'name', 'command', or 'version'.")
+            if not name or not command or not version or not file_to_run:
+                print(f"Error: Invalid conf file in {app_dir}. Missing 'name', 'command', 'version', or 'file'.")
+                return
+
+            script_file = os.path.join(app_dir, file_to_run)  # Create the full script path
+
+            if not os.path.exists(script_file):
+                print(f"Error: Specified file '{file_to_run}' does not exist in {app_dir}.")
                 return
 
             if command in globals() and callable(globals()[command]):
@@ -532,6 +663,11 @@ def main():
                 download(url, destination)
              else:
                 print("Usage: download <url> [directory]")
+        elif cmd == "javac": # New javac command
+            if len(parts) > 1:
+                javac(parts[1])
+            else:
+                print("Usage: javac <filename.java>")
         elif cmd == "run":
             if len(parts) > 1:
                 run(parts[1])
@@ -544,6 +680,16 @@ def main():
                 move(parts[1], parts[2])
             else:
                 print("Usage: move <source> <destination>")
+        elif cmd == "cowsay":
+            if len(parts) > 1:
+                cowsay(" ".join(parts[1:]))  # Joins words for the entire text
+            else:
+                print("Usage: cowsay <text>")
+        elif cmd == "install":
+            if len(parts) > 1:
+                installapp(parts[1])
+            else:
+                print("Usage: installapp <url>")
         elif cmd in INSTALLED_APPS:
             app(cmd) # Run installed app
 
