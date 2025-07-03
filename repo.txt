@@ -2,3 +2,5 @@ blackjack
 https://raw.githubusercontent.com/AxoIsAxo/null.os/main/applications/installers/blackjack-install.conf
 dupe
 https://pastebin.com/raw/WmV9D7uV
+goinstall
+https://raw.githubusercontent.com/AxoIsAxo/null.os/refs/heads/main/applications/installers/goinstall-install.conf
