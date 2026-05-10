@@ -4,3 +4,5 @@ dupe
 https://pastebin.com/raw/WmV9D7uV
 goinstall
 https://raw.githubusercontent.com/AxoIsAxo/null.os/refs/heads/main/applications/installers/goinstall-install.conf
+pycat
+https://raw.githubusercontent.com/AxoIsAxo/null.os/refs/heads/main/applications/installers/pycat-install.conf
